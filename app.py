@@ -150,6 +150,10 @@ elif menu == "Import Data":
                     with Session(engine) as db_session:
                         success_count = 0
                         
+                        # Set up the progress bar
+                        total_rows = len(df)
+                        progress_bar = st.progress(0.0, text="Importing courses...")
+                        
                         # Iterate through uploaded data and map columns to the Course model
                         for index, row in df.iterrows():
                             try:
@@ -190,8 +194,13 @@ elif menu == "Import Data":
                             except Exception as e:
                                 st.error(f"Error on row {index + 2} ({raw_code}): {e}")
                                 
+                            # Update progress bar dynamically
+                            current_progress = min((index + 1) / total_rows, 1.0)
+                            progress_bar.progress(current_progress, text=f"Importing: {success_count} / {total_rows} courses")
+                                
                         db_session.commit()
                         st.success(f"✅ Masterful Execution! Successfully committed {success_count} courses.")
+                        progress_bar.empty() # Hide the progress bar when done
         except Exception as e:
             st.error(f"Could not read file: {e}")
       
@@ -216,6 +225,10 @@ elif menu == "Import Data":
                     with Session(engine) as db_session:
                         venue_success_count = 0
                         
+                        # Set up the progress bar
+                        total_venues = len(v_df)
+                        v_progress_bar = st.progress(0.0, text="Importing venues...")
+                        
                         for index, row in v_df.iterrows():
                             try:
                                 raw_venue_name = str(row['Venue Name']).strip()
@@ -234,8 +247,13 @@ elif menu == "Import Data":
                             except Exception as e:
                                 st.error(f"Error on row {index + 2}: {e}")
                                 
+                            # Update progress bar dynamically
+                            current_v_progress = min((index + 1) / total_venues, 1.0)
+                            v_progress_bar.progress(current_v_progress, text=f"Importing: {venue_success_count} / {total_venues} venues")
+                                
                         db_session.commit()
                         st.success(f"✅ Successfully committed {venue_success_count} venues.")
+                        v_progress_bar.empty() # Hide the progress bar when done
         except Exception as e:
             st.error(f"Could not read venue file: {e}")
 
@@ -258,6 +276,11 @@ elif menu == "Import Data":
                 with st.spinner("Mapping lecturers to existing courses..."):
                     with Session(engine) as db_session:
                         mapped_count = 0
+                        
+                        # Set up the progress bar
+                        total_lec = len(l_df)
+                        l_progress_bar = st.progress(0.0, text="Mapping lecturers...")
+                        
                         for index, row in l_df.iterrows():
                             raw_code = str(row['Course Code']).strip()
                             raw_lecturer = str(row['Lecturer']).strip()
@@ -267,8 +290,14 @@ elif menu == "Import Data":
                             if course_to_update:
                                 course_to_update.lecturer = raw_lecturer
                                 mapped_count += 1
+                                
+                            # Update progress bar dynamically
+                            current_l_progress = min((index + 1) / total_lec, 1.0)
+                            l_progress_bar.progress(current_l_progress, text=f"Mapping: {mapped_count} / {total_lec} courses")
+                                
                         db_session.commit()
                         st.success(f"✅ Successfully mapped lecturers to {mapped_count} courses!")
+                        l_progress_bar.empty() # Hide the progress bar when done
         except Exception as e:
             st.error(f"Could not read lecturer file: {e}")
 
